@@ -57,6 +57,7 @@ module System.Random
 
 import Control.Arrow
 import Control.Monad.IO.Class
+import Control.Monad.State.Strict
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.IORef
@@ -288,10 +289,10 @@ instance Random CUIntPtr
 instance Random CIntMax
 instance Random CUIntMax
 instance Random CFloat where
-  randomR (CFloat l, CFloat h) = first CFloat . randomR (l, h)
+  randomR r = first CFloat . randomR (coerce r :: (Float, Float))
   random = first CFloat . random
 instance Random CDouble where
-  randomR (CDouble l, CDouble h) = first CDouble . randomR (l, h)
+  randomR r = first CDouble . randomR (coerce r :: (Double, Double))
   random = first CDouble . random
 
 instance Random Char
@@ -302,6 +303,75 @@ instance Random Double where
 instance Random Float where
   randomR r g = runStateGen g (uniformRM r)
   random g = runStateGen g (uniformRM (0, 1))
+
+instance (Random a, Random b) => Random (a, b) where
+  randomR ((al, bl), (ah, bh)) g = runStateGen g $ \_ -> do
+    (,) <$> state (randomR (al, ah)) <*> state (randomR (bl, bh))
+  random g = runStateGen g $ \_ ->
+    (,) <$> state random <*> state random
+
+instance (Random a, Random b, Random c) => Random (a, b, c) where
+  randomR ((al, bl, cl), (ah, bh, ch)) g = runStateGen g $ \_ -> do
+    (,,) <$> state (randomR (al, ah))
+         <*> state (randomR (bl, bh))
+         <*> state (randomR (cl, ch))
+  random g = runStateGen g $ \_ ->
+    (,,) <$> state random <*> state random <*> state random
+
+instance (Random a, Random b, Random c, Random d) => Random (a, b, c, d) where
+  randomR ((al, bl, cl, dl), (ah, bh, ch, dh)) g = runStateGen g $ \_ -> do
+    (,,,) <$> state (randomR (al, ah))
+          <*> state (randomR (bl, bh))
+          <*> state (randomR (cl, ch))
+          <*> state (randomR (dl, dh))
+  random g = runStateGen g $ \_ ->
+    (,,,) <$> state random <*> state random <*> state random <*> state random
+
+instance (Random a, Random b, Random c, Random d, Random e) => Random (a, b, c, d, e) where
+  randomR ((al, bl, cl, dl, el), (ah, bh, ch, dh, eh)) g = runStateGen g $ \_ -> do
+    (,,,,) <$> state (randomR (al, ah))
+           <*> state (randomR (bl, bh))
+           <*> state (randomR (cl, ch))
+           <*> state (randomR (dl, dh))
+           <*> state (randomR (el, eh))
+  random g = runStateGen g $ \_ ->
+    (,,,,) <$> state random <*> state random <*> state random <*> state random <*> state random
+
+instance (Random a, Random b, Random c, Random d, Random e, Random f) =>
+  Random (a, b, c, d, e, f) where
+  randomR ((al, bl, cl, dl, el, fl), (ah, bh, ch, dh, eh, fh)) g = runStateGen g $ \_ -> do
+    (,,,,,) <$> state (randomR (al, ah))
+            <*> state (randomR (bl, bh))
+            <*> state (randomR (cl, ch))
+            <*> state (randomR (dl, dh))
+            <*> state (randomR (el, eh))
+            <*> state (randomR (fl, fh))
+  random g = runStateGen g $ \_ ->
+    (,,,,,) <$> state random
+            <*> state random
+            <*> state random
+            <*> state random
+            <*> state random
+            <*> state random
+
+instance (Random a, Random b, Random c, Random d, Random e, Random f, Random g) =>
+  Random (a, b, c, d, e, f, g) where
+  randomR ((al, bl, cl, dl, el, fl, gl), (ah, bh, ch, dh, eh, fh, gh)) g = runStateGen g $ \_ -> do
+    (,,,,,,) <$> state (randomR (al, ah))
+             <*> state (randomR (bl, bh))
+             <*> state (randomR (cl, ch))
+             <*> state (randomR (dl, dh))
+             <*> state (randomR (el, eh))
+             <*> state (randomR (fl, fh))
+             <*> state (randomR (gl, gh))
+  random g = runStateGen g $ \_ ->
+    (,,,,,,) <$> state random
+             <*> state random
+             <*> state random
+             <*> state random
+             <*> state random
+             <*> state random
+             <*> state random
 
 -------------------------------------------------------------------------------
 -- Global pseudo-random number generator
