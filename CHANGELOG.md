@@ -1,4 +1,4 @@
-# 1.2.1
+# Unreleased changes
 
 * Addition of tuple instances for `Random` up to 7-tuple
 
