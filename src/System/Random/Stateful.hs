@@ -105,7 +105,7 @@ module System.Random.Stateful
 import Control.DeepSeq
 import Control.Monad.IO.Class
 import Control.Monad.ST
-import Control.Concurrent.STM
+import Control.Concurrent.STM (STM, TVar, newTVar, newTVarIO, readTVar, writeTVar)
 import Control.Monad.State.Strict
 import Data.IORef
 import Data.STRef
@@ -120,8 +120,8 @@ import System.Random.Internal
 -- [Monadic pseudo-random number generators] 'StatefulGen' is an interface to
 --     monadic pseudo-random number generators.
 --
--- [Monadic adapters] 'StateGenM', 'AtomicGenM', 'IOGenM' and 'STGenM' turn a
---     'RandomGen' instance into a 'StatefulGen' instance.
+-- [Monadic adapters] 'StateGenM', 'AtomicGenM', 'IOGenM', 'STGenM` and 'TGenM'
+--     turn a 'RandomGen' instance into a 'StatefulGen' instance.
 --
 -- [Drawing from a range] 'UniformRange' is used to generate a value of a
 --     type uniformly within a range.
@@ -192,7 +192,7 @@ import System.Random.Internal
 -- $monadicadapters
 --
 -- Pure pseudo-random number generators can be used in monadic code via the
--- adapters 'StateGenM', 'AtomicGenM', 'IOGenM' and 'STGenM'.
+-- adapters 'StateGenM', 'AtomicGenM', 'IOGenM', 'STGenM' and 'TGenM'
 --
 -- *   'StateGenM' can be used in any state monad. With strict 'StateT' there is
 --     no performance overhead compared to using the 'RandomGen' instance
@@ -207,6 +207,11 @@ import System.Random.Internal
 --
 -- *   'STGenM' is a wrapper around an 'STRef' that holds a pure generator.
 --     'STGenM' is safe in the presence of exceptions, but not concurrency.
+--
+-- *   'TGenM' is a wrapper around a 'TVar' that holds a pure generator. 'TGenM'
+--     can be used in a software transactional memory monad 'STM`. It is not as
+--     performant as 'AtomicGenM`, but it can provide stronger guarantees in a
+--     concurrent setting.
 
 -- | Interface to operations on 'RandomGen' wrappers like 'IOGenM' and 'StateGenM'.
 --
